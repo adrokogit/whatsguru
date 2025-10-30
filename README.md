@@ -1,6 +1,6 @@
 # 🤖 WhatsApp Bot (Node.js + TypeScript)
 
-Bot modular para WhatsApp construido con **whatsapp-web.js**, escrito en **TypeScript (modo no estricto)**, y diseñado para ser fácilmente extensible mediante *handlers* y *wrappers*.
+Bot modular para WhatsApp construido con **whatsapp-web.js**, escrito en **TypeScript (modo no estricto)**, y diseñado para ser fácilmente extensible mediante _handlers_ y _wrappers_.
 
 ---
 
@@ -9,11 +9,13 @@ Bot modular para WhatsApp construido con **whatsapp-web.js**, escrito en **TypeS
 - ✅ Desarrollado en **Node.js + TypeScript**
 - 🧩 Arquitectura basada en **handlers** (clases independientes por comando)
 - 🧱 Soporte para **wrappers**:
-  - `PrivateWrapperHandler` → restringe un handler a un número concreto  
+  - `PrivateWrapperHandler` → restringe un handler a un número concreto
   - `GroupWrapperHandler` → restringe un handler a un grupo concreto
 - ⏰ **Scheduler** con `node-cron` y `setTimeout` para programar mensajes
+- 🌊 Integración con **Stormglass API** para datos de olas, viento y mareas
 - 💬 Sistema de **ayuda automática** con el comando `!!help`
 - 🔐 Autenticación local (`LocalAuth`) para conservar la sesión de WhatsApp
+- 🔑 Configuración mediante archivo **.env**
 
 ---
 
@@ -35,9 +37,10 @@ src/
     HelpHandler.ts
     PrivateWrapperHandler.ts
     GroupWrapperHandler.ts
-    ...
+    WhatsGuruHandler.ts      # Nuevo handler: parte marítimo con Stormglass
   scheduler/
     scheduler.ts             # Programación de envíos automáticos
+.env                         # Variables de entorno (API keys)
 ```
 
 ---
@@ -52,10 +55,13 @@ cd whatsapp-bot
 # 2. Instala dependencias
 npm install
 
-# 3. Compila TypeScript (opcional)
+# 3. Crea el archivo .env con tu clave de Stormglass
+echo "STORMGLASS_API_KEY=tu_api_key_aqui" > .env
+
+# 4. Compila TypeScript (opcional)
 npm run build
 
-# 4. O ejecuta directamente en modo desarrollo
+# 5. O ejecuta directamente en modo desarrollo
 npm run dev
 ```
 
@@ -81,6 +87,35 @@ El proyecto está configurado en modo **no estricto**, ideal para desarrollos r�
 
 ---
 
+## 🌊 Configuración del entorno (.env)
+
+El bot usa variables de entorno para gestionar claves sensibles como la API key de Stormglass.
+
+1. Instala `dotenv`:
+
+   ```bash
+   npm install dotenv
+   ```
+
+2. Crea el archivo `.env` en la raíz:
+
+   ```
+   STORMGLASS_API_KEY=tu_api_key_de_stormglass
+   ```
+
+3. En `src/app.ts`, añade al principio:
+
+   ```ts
+   import "dotenv/config";
+   ```
+
+4. Asegúrate de añadirlo al `.gitignore`:
+   ```
+   .env
+   ```
+
+---
+
 ## 💬 Uso básico
 
 1. Ejecuta el bot:
@@ -90,18 +125,20 @@ El proyecto está configurado en modo **no estricto**, ideal para desarrollos r�
 2. Escanea el **QR** que aparecerá en la terminal con tu WhatsApp.
 3. Cuando veas `✅ Bot listo`, prueba comandos:
 
-| Comando | Descripción |
-|----------|--------------|
-| `ping` | Responde con `pong 🏓` |
-| `echo <texto>` | Repite el texto |
-| `!!help` | Muestra la lista de comandos disponibles |
-| `!!group-id` | Muestra el ID del grupo (solo dentro de grupos) |
+| Comando               | Descripción                                         |
+| --------------------- | --------------------------------------------------- |
+| `ping`                | Responde con `pong 🏓`                              |
+| `echo <texto>`        | Repite el texto                                     |
+| `!!help`              | Muestra la lista de comandos disponibles            |
+| `!!group-id`          | Muestra el ID del grupo (solo dentro de grupos)     |
+| `!!whatsguru {playa}` | Muestra datos de olas, viento y mareas (Stormglass) |
 
 ---
 
 ## 🧱 Extender el bot
 
 ### Crear un nuevo handler
+
 Crea un archivo en `src/handlers/`, por ejemplo `HelloHandler.ts`:
 
 ```ts
@@ -124,6 +161,7 @@ export class HelloHandler implements MessageHandler {
 ```
 
 Regístralo en `app.ts`:
+
 ```ts
 registry.register(new HelloHandler());
 ```
@@ -143,6 +181,35 @@ const group = "1234567890-1234567890@g.us";
 registry.register(new PrivateWrapperHandler(new HelloHandler(), admin));
 registry.register(new GroupWrapperHandler(new HelloHandler(), group));
 ```
+
+---
+
+## 🌊 Handler `WhatsGuruHandler`
+
+Permite consultar condiciones marítimas mediante la **API de Stormglass**:
+
+```bash
+!!whatsguru {nombre de playa}
+```
+
+Ejemplo:
+
+```
+!!whatsguru salinas
+```
+
+Devuelve:
+
+```
+🌊 WhatsGuru — Playa de Salinas
+📍 (43.5756, -5.9455)
+🏄 Olas: 1.2 m · periodo 10 s
+💨 Viento: 5 m/s 320°
+🌡 Agua: 18.4 °C
+🕒 Datos: 30/10 09:00
+```
+
+Puedes añadir tus playas en el objeto `BEACHES` dentro del handler con su latitud y longitud.
 
 ---
 
@@ -166,14 +233,15 @@ export function initScheduler() {
 
 ## 🧩 Handlers incluidos
 
-| Handler | Descripción |
-|----------|--------------|
-| `PingHandler` | Responde a `ping` |
-| `EchoHandler` | Repite el texto tras `echo` |
-| `HelpHandler` | Lista los comandos disponibles |
-| `GroupIdHandler` | Muestra el ID del grupo actual |
-| `PrivateWrapperHandler` | Limita la ejecución a un número |
-| `GroupWrapperHandler` | Limita la ejecución a un grupo |
+| Handler                 | Descripción                             |
+| ----------------------- | --------------------------------------- |
+| `PingHandler`           | Responde a `ping`                       |
+| `EchoHandler`           | Repite el texto tras `echo`             |
+| `HelpHandler`           | Lista los comandos disponibles          |
+| `GroupIdHandler`        | Muestra el ID del grupo actual          |
+| `PrivateWrapperHandler` | Limita la ejecución a un número         |
+| `GroupWrapperHandler`   | Limita la ejecución a un grupo          |
+| `WhatsGuruHandler`      | Consulta el parte marítimo (Stormglass) |
 
 ---
 
@@ -183,18 +251,18 @@ export function initScheduler() {
 node_modules
 dist
 .wwebjs_auth
-.wwebjs_cache
+.env
 ```
 
 ---
 
 ## 🧰 Scripts
 
-| Script | Descripción |
-|--------|--------------|
-| `npm run dev` | Ejecuta en modo desarrollo (ts-node) |
-| `npm run build` | Compila TypeScript a JavaScript |
-| `npm start` | Ejecuta el código compilado |
+| Script          | Descripción                          |
+| --------------- | ------------------------------------ |
+| `npm run dev`   | Ejecuta en modo desarrollo (ts-node) |
+| `npm run build` | Compila TypeScript a JavaScript      |
+| `npm start`     | Ejecuta el código compilado          |
 
 ---
 
@@ -206,5 +274,5 @@ MIT — libre para usar y modificar.
 
 ## 🧑‍💻 Autor
 
-Desarrollado por **Coquito**.  
-Arquitectura basada en handlers y wrappers para bots escalables en WhatsApp.
+Desarrollado por **Adrokogit**.  
+Arquitectura basada en handlers, wrappers y conexión a APIs externas como Stormglass.
