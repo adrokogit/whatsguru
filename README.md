@@ -183,6 +183,7 @@ export function initScheduler() {
 node_modules
 dist
 .wwebjs_auth
+.wwebjs_cache
 ```
 
 ---
