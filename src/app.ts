@@ -8,6 +8,7 @@ import { initScheduler } from "./scheduler/scheduler";
 import { PrintMessageHandler } from "./handlers/PrintMessageHandler";
 import { HelpHandler } from "./handlers/HelpHandler";
 import { ReminderHandler } from "./handlers/ReminderHandler";
+import { GroupIdHandler } from "./handlers/GroupIdHandler";
 
 // crear registry y registrar handlers
 const registry = new HandlerRegistry();
@@ -15,6 +16,7 @@ registry.register(new HelpHandler(registry));
 registry.register(new PingHandler());
 registry.register(new ReminderHandler());
 registry.register(new PrintMessageHandler());
+registry.register(new GroupIdHandler());
 
 client.on("qr", (qr) => {
   qrcode.generate(qr, { small: true });
@@ -42,4 +44,4 @@ client.on("message_create", async (msg) => {
 client.initialize();
 
 // exporta el client y el registry si el scheduler los quiere usar
-export { client, registry };
+export { client };
