@@ -27,7 +27,7 @@ client.on("qr", (qr) => {
 
 client.on("ready", () => {
   console.log("✅ Bot listo");
-  initScheduler();
+  //initScheduler();
 });
 
 //Los mensajes de los demás
