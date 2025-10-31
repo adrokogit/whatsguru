@@ -19,10 +19,31 @@ export class MessageContext {
   async sendTo(to: string, text: string) {
     await client.sendMessage(to, text);
   }
+
   async getSenderName(): Promise<string> {
-    const contact = await this.message.getContact();
-    // pushname es el nombre que el usuario muestra en WhatsApp
-    // name suele ser el alias guardado en tu lista de contactos (si existe)
-    return contact.pushname || contact.name || contact.number;
+    // en grupos el "remitente real" puede venir en author
+    const senderId = this.message.from || (this.message as any).author;
+    if (!senderId) {
+      return "Desconocido";
+    }
+
+    try {
+      // este es el camino “bueno” que ya tenías
+      const contact = await this.message.getContact();
+      return contact.pushname || contact.name || contact.number || senderId;
+    } catch (err) {
+      // si falla getContact (lo que te estaba pasando)
+      try {
+        const contact = await client.getContactById(senderId);
+        return (
+          contact.pushname ||
+          contact.name ||
+          (contact as any).number ||
+          senderId
+        );
+      } catch {
+        return senderId;
+      }
+    }
   }
 }
