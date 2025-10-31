@@ -147,6 +147,12 @@ MIT — libre para usar y modificar.
 
 ---
 
+## ⚠️ Nota
+
+Se usan "overrides" en package.json para fijar versiones seguras de tar-fs y ws.
+
+---
+
 ## 🧑‍💻 Autor
 
 Desarrollado por **Adrokogit**  
