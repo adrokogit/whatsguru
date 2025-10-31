@@ -19,6 +19,8 @@ export class WhatsGuruHandler implements MessageHandler {
       return;
     }
 
+    await ctx.reply("🔍 Buscando datos...");
+
     // 2. resolver playa
     const beach = findBeachByName(raw);
     if (!beach) {
