@@ -1,6 +1,6 @@
 import { MessageHandler } from "../core/MessageHandler";
 import { MessageContext } from "../core/MessageContext";
-import { scheduleAt } from "../scheduler/scheduler";
+import { createOneTimeMessage } from "../scheduler/scheduler";
 
 export class ReminderHandler implements MessageHandler {
   canHandle(ctx: MessageContext): boolean {
@@ -14,7 +14,7 @@ export class ReminderHandler implements MessageHandler {
     const date = new Date(`${dateStr}T${timeStr}:00`);
 
     // programamos
-    scheduleAt(date, ctx.from, msg);
+    createOneTimeMessage(ctx.from, msg, date);
 
     await ctx.reply("📆 Recordatorio programado.");
   }

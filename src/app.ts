@@ -5,7 +5,6 @@ import { HandlerRegistry } from "./core/HandlerRegistry";
 import { MessageContext } from "./core/MessageContext";
 // handlers
 import { PingHandler } from "./handlers/PingHandler";
-import { initScheduler } from "./scheduler/scheduler";
 import { PrintMessageHandler } from "./handlers/PrintMessageHandler";
 import { HelpHandler } from "./handlers/HelpHandler";
 import { ReminderHandler } from "./handlers/ReminderHandler";
@@ -27,16 +26,23 @@ client.on("qr", (qr) => {
 
 client.on("ready", () => {
   console.log("✅ Bot listo");
-  //initScheduler();
+
+  //scheduled messages aquí
+  /*
+  createCronMessage(
+    "34633301163-1518106472@g.us",
+    "⏰ Mensaje automático cada minuto",
+    "* * * * *"
+  );*/
 });
 
-//Los mensajes de los demás
+// Mensajes de los demás
 client.on("message", async (msg) => {
   const ctx = new MessageContext(msg);
   await registry.process(ctx);
 });
 
-//Mis mensajes
+// Mis mensajes
 client.on("message_create", async (msg) => {
   if (msg.fromMe) {
     const ctx = new MessageContext(msg);
@@ -45,6 +51,9 @@ client.on("message_create", async (msg) => {
 });
 
 client.initialize();
+
+//import server.ts para api
+import "./server";
 
 // exporta el client y el registry si el scheduler los quiere usar
 export { client };

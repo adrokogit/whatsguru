@@ -1,24 +1,131 @@
-import cron from "node-cron";
+// src/scheduler/scheduler.ts
+import * as cron from "node-cron";
 import { client } from "../whatsapp/client";
 
-// 1) Ejemplo: todos los días a las 10:00
-export function initScheduler() {
-  // formato cron: segundo (opcional) minuto hora díaMes mes díaSemana
-  cron.schedule("0 10 * * *", async () => {
-    // aquí puedes obtener destinatarios de BBDD
-    const to = "34600111222@c.us"; // número en formato WhatsApp
-    await client.sendMessage(to, "Buenos días 👋");
-  });
+export type ScheduleType = "cron" | "once";
 
-  // 2) Si quieres programar algo una vez:
-  // scheduleAt(new Date('2025-10-31T15:30:00'), '34600111222@c.us', 'Hola futuro!');
+export interface ScheduledMessage {
+  id: string;
+  to: string;
+  text: string;
+  type: ScheduleType;
+  cronExpr?: string;
+  runAt?: Date;
 }
 
-export function scheduleAt(date: Date, to: string, message: string) {
-  const diff = date.getTime() - Date.now();
-  if (diff <= 0) return;
+const SCHEDULES = new Map<string, ScheduledMessage>();
+const JOBS = new Map<string, cron.ScheduledTask>();
 
-  setTimeout(async () => {
-    await client.sendMessage(to, message);
-  }, diff);
+function generateId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+export function createCronMessage(
+  to: string,
+  text: string,
+  cronExpr: string
+): ScheduledMessage {
+  if (!cron.validate(cronExpr)) {
+    throw new Error("Expresión cron inválida");
+  }
+
+  const id = generateId();
+  const data: ScheduledMessage = { id, to, text, type: "cron", cronExpr };
+  SCHEDULES.set(id, data);
+
+  const task = cron.schedule(cronExpr, async () => {
+    try {
+      await client.sendMessage(to, text);
+      console.log(`[scheduler] enviado ${id} a ${to}`);
+    } catch (e) {
+      console.error(`[scheduler] error en ${id}`, e);
+    }
+  });
+
+  JOBS.set(id, task);
+  return data;
+}
+
+export function createOneTimeMessage(
+  to: string,
+  text: string,
+  runAt: Date
+): ScheduledMessage {
+  const id = generateId();
+  const data: ScheduledMessage = { id, to, text, type: "once", runAt };
+  SCHEDULES.set(id, data);
+
+  const delay = runAt.getTime() - Date.now();
+  const send = async () => {
+    try {
+      await client.sendMessage(to, text);
+      console.log(`[scheduler] enviado (once) ${id} a ${to}`);
+    } catch (e) {
+      console.error(`[scheduler] error (once) ${id}`, e);
+    } finally {
+      SCHEDULES.delete(id);
+    }
+  };
+
+  if (delay <= 0) {
+    void send();
+  } else {
+    setTimeout(send, delay);
+  }
+
+  return data;
+}
+
+export function listSchedules(): ScheduledMessage[] {
+  return Array.from(SCHEDULES.values());
+}
+
+export function getSchedule(id: string): ScheduledMessage | undefined {
+  return SCHEDULES.get(id);
+}
+
+export function deleteSchedule(id: string): boolean {
+  const job = JOBS.get(id);
+  if (job) {
+    job.stop();
+    JOBS.delete(id);
+  }
+  return SCHEDULES.delete(id);
+}
+
+// actualización solo para cron
+export function updateCronMessage(
+  id: string,
+  fields: Partial<Pick<ScheduledMessage, "to" | "text" | "cronExpr">>
+): ScheduledMessage | null {
+  const current = SCHEDULES.get(id);
+  if (!current || current.type !== "cron") return null;
+
+  // parar el job actual si existe
+  const job = JOBS.get(id);
+  if (job) {
+    job.stop();
+    JOBS.delete(id);
+  }
+
+  const updated: ScheduledMessage = {
+    ...current,
+    ...fields,
+  };
+
+  SCHEDULES.set(id, updated);
+
+  // si sigue siendo cron, reprogramamos
+  if (updated.cronExpr) {
+    const task = cron.schedule(updated.cronExpr, async () => {
+      try {
+        await client.sendMessage(updated.to, updated.text);
+      } catch (e) {
+        console.error(`[scheduler] error en ${id}`, e);
+      }
+    });
+    JOBS.set(id, task);
+  }
+
+  return updated;
 }
