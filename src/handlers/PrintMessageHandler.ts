@@ -1,5 +1,6 @@
 import { MessageHandler } from "../core/MessageHandler";
 import { MessageContext } from "../core/MessageContext";
+import { logger } from "../utils/logger";
 
 export class PrintMessageHandler implements MessageHandler {
   canHandle(ctx: MessageContext): boolean {
@@ -8,9 +9,7 @@ export class PrintMessageHandler implements MessageHandler {
 
   async handle(ctx: MessageContext): Promise<void> {
     const name = await ctx.getSenderName();
-    console.log("From:", name);
-    console.log("Body:", ctx.body);
-    console.log("------------------------");
+    logger.info("📥 mensaje recibido", { from: name, body: ctx.body });
   }
   getHelpMessage(): string {
     return "";

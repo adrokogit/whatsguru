@@ -1,6 +1,7 @@
 // src/scheduler/scheduler.ts
 import * as cron from "node-cron";
 import { client } from "../whatsapp/client";
+import { logger } from "../utils/logger";
 
 export type ScheduleType = "cron" | "once";
 
@@ -26,6 +27,7 @@ export function createCronMessage(
   cronExpr: string
 ): ScheduledMessage {
   if (!cron.validate(cronExpr)) {
+    logger.warn("Expresión cron inválida", { cronExpr, to });
     throw new Error("Expresión cron inválida");
   }
 
@@ -36,9 +38,9 @@ export function createCronMessage(
   const task = cron.schedule(cronExpr, async () => {
     try {
       await client.sendMessage(to, text);
-      console.log(`[scheduler] enviado ${id} a ${to}`);
+      logger.info(`[scheduler] enviado ${id} a ${to}`);
     } catch (e) {
-      console.error(`[scheduler] error en ${id}`, e);
+      logger.error(`[scheduler] error en ${id}`, e);
     }
   });
 
@@ -59,9 +61,9 @@ export function createOneTimeMessage(
   const send = async () => {
     try {
       await client.sendMessage(to, text);
-      console.log(`[scheduler] enviado (once) ${id} a ${to}`);
+      logger.info(`[scheduler] enviado (once) ${id} a ${to}`);
     } catch (e) {
-      console.error(`[scheduler] error (once) ${id}`, e);
+      logger.error(`[scheduler] error (once) ${id}`, e);
     } finally {
       SCHEDULES.delete(id);
     }

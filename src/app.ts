@@ -3,6 +3,8 @@ import qrcode from "qrcode-terminal";
 import { client } from "./whatsapp/client";
 import { HandlerRegistry } from "./core/HandlerRegistry";
 import { MessageContext } from "./core/MessageContext";
+import { logger } from "./utils/logger";
+
 // handlers
 import { PingHandler } from "./handlers/PingHandler";
 import { PrintMessageHandler } from "./handlers/PrintMessageHandler";
@@ -25,7 +27,7 @@ client.on("qr", (qr) => {
 });
 
 client.on("ready", () => {
-  console.log("✅ Bot listo");
+  logger.info("✅ Bot listo");
 
   //scheduled messages aquí
   /*
