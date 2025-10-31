@@ -1,4 +1,3 @@
-// src/handlers/WhatsGuruHandler.ts
 import { MessageHandler } from "../core/MessageHandler";
 import { MessageContext } from "../core/MessageContext";
 import { findBeachByName, listBeaches } from "../services/beaches";

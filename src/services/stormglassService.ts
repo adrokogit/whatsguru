@@ -1,6 +1,3 @@
-// src/services/stormglassService.ts
-// si usas Node < 18: import fetch from "node-fetch";
-
 const STORMGLASS_BASE = "https://api.stormglass.io/v2/weather/point";
 
 const DEFAULT_PARAMS = [

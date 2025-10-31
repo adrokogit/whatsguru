@@ -1,4 +1,3 @@
-// src/services/beaches.ts
 export type Beach = { lat: number; lng: number; alias?: string };
 
 const BEACHES: Record<string, Beach> = {
@@ -6,11 +5,6 @@ const BEACHES: Record<string, Beach> = {
   rodiles: { lat: 43.5246, lng: -5.3953, alias: "Playa de Rodiles" },
   gijon: { lat: 43.5453, lng: -5.6615, alias: "Playa de San Lorenzo (Gijón)" },
   sanlorezo: {
-    lat: 43.5453,
-    lng: -5.6615,
-    alias: "Playa de San Lorenzo (Gijón)",
-  },
-  sanlorenzo: {
     lat: 43.5453,
     lng: -5.6615,
     alias: "Playa de San Lorenzo (Gijón)",

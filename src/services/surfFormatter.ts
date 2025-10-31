@@ -1,4 +1,3 @@
-// src/services/surfFormatter.ts
 export function formatSurfMessage(
   rawName: string,
   alias: string | undefined,
