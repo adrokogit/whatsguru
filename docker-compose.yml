@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  whatsguru:
+    build: .
+    container_name: whatsguru-bot
+    restart: always
+    volumes:
+      # Mapping persistent login sessions
+      - ./wwebjs_auth: /usr/src/app/.wwebjs_auth
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
